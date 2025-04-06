@@ -12,10 +12,10 @@ RUN go mod download
 
 COPY *.go ./
 # Copy all internal modules
-COPY cmd/*.go ./cmd/
-COPY config/*.go ./config/
-COPY internal/*.go ./internal/
-COPY version/*.go ./version/
+COPY cmd/ ./cmd/
+COPY pkg/ ./pkg/
+COPY internal/ ./internal/
+COPY version/ ./version/
 
 ARG TARGETOS
 ARG TARGETARCH

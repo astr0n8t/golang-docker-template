@@ -1,4 +1,4 @@
-package config
+package internal
 
 import (
 	"strings"
@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Provider defines a set of read-only methods for accessing the application
+// ConfigStore defines a set of read-only methods for accessing the application
 // configuration params as defined in one of the config files.
-type Provider interface {
+type ConfigStore interface {
 	ConfigFileUsed() string
 	Get(key string) interface{}
 	GetBool(key string) bool
@@ -32,21 +32,24 @@ type Provider interface {
 var defaultConfig *viper.Viper
 
 // Config returns a default config providers
-func Config() Provider {
-	return defaultConfig
+func Config() ConfigStore {
+	return readViperConfig("UPPER_APP_NAME")
+}
+
+func DevConfig() ConfigStore {
+	return readViperDevConfig("UPPER_APP_NAME")
 }
 
 // LoadConfigProvider returns a configured viper instance
-func LoadConfigProvider(appName string) Provider {
+func LoadConfigProvider(appName string) ConfigStore {
 	return readViperConfig(appName)
-}
-
-func init() {
-	defaultConfig = readViperConfig("UPPER_APP_NAME")
 }
 
 func setDefaults(v *viper.Viper) {
 	v.SetDefault("setting", "value")
+}
+
+func setDevOverideDefaults(v *viper.Viper) {
 }
 
 func readViperConfig(appName string) *viper.Viper {
@@ -61,6 +64,25 @@ func readViperConfig(appName string) *viper.Viper {
 	v.AddConfigPath("/etc/APP_NAME/")
 
 	v.ReadInConfig()
+
+	v.SetEnvPrefix(appName)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
+
+	// workaround because viper does not treat env vars the same as other config
+	for _, key := range v.AllKeys() {
+		val := v.Get(key)
+		v.Set(key, val)
+	}
+
+	return v
+}
+
+func readViperDevConfig(appName string) *viper.Viper {
+	v := viper.New()
+
+	setDefaults(v)
+	setDevOverideDefaults(v)
 
 	v.SetEnvPrefix(appName)
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

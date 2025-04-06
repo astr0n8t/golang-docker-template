@@ -4,15 +4,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
-
-	"github.com/astr0n8t/APP_NAME/config"
 )
 
 // Runs APP_NAME
 func Run() {
-
 	// Make sure we can load config
-	config := config.Config()
+	config := Config()
 	log.Printf("Loaded config file %v", config.ConfigFileUsed())
 
 	// Insert main app code here
