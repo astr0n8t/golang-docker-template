@@ -1,6 +1,9 @@
 package internal
 
 import (
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -33,11 +36,19 @@ var defaultConfig *viper.Viper
 
 // Config returns a default config providers
 func Config() ConfigStore {
-	return readViperConfig("UPPER_APP_NAME")
-}
+	runMode := "production"
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatalf("cannot determine run status: %v", err)
+	}
 
-func DevConfig() ConfigStore {
-	return readViperDevConfig("UPPER_APP_NAME")
+	// Check if we're running in a dev build
+	dir := filepath.Dir(ex)
+	if strings.Contains(dir, "go-build") {
+		return readViperDevConfig("UPPER_APP_NAME")
+	}
+
+	return readViperConfig("UPPER_APP_NAME")
 }
 
 // LoadConfigProvider returns a configured viper instance
